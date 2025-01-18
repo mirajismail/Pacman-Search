@@ -157,7 +157,7 @@ def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHe
         visited.add(curr_state)
         succs = problem.getSuccessors(curr_state)
         for succ_state, succ_dir, succ_cost in succs:
-            if True or succ_state not in visited:
+            if succ_state not in visited:
                 succ_path = list(curr_path)
                 succ_path.append(succ_dir)
                 cost = succ_cost + curr_cost
