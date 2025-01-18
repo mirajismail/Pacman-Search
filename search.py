@@ -87,23 +87,21 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
     # stack that stores a tuple of (state, path_to_state)
     return graphSearch(problem, util.Stack)
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
     # queue that stores a tuple of (state, path_to_state)
     return graphSearch(problem, util.Queue)
 
+def priorityFunc(graph_node):
+    # we store the cost in the last position
+    return graph_node[-1]
+
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    def priority(graph_node):
-        # we store the cost in the 2nd position
-        return graph_node[1]
-    return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priority))
+    return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priorityFunc))
 
 def nullHeuristic(state, problem=None) -> float:
     """
@@ -112,17 +110,46 @@ def nullHeuristic(state, problem=None) -> float:
     """
     return 0
 
+def aStarSearchRepeatExpansion(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
+    """Search the node that has the lowest combined cost and heuristic first."""
+    priorityQueue = util.PriorityQueue()
+    start_state = problem.getStartState()
+    priorityQueue.push((start_state, 0, []), 1)
+    visited = set()
+    best_path = []
+    lowest_cost = {}
+    lowest_cost[start_state] = 0
+    while not priorityQueue.isEmpty():
+        curr_state, curr_cost, curr_path = priorityQueue.pop()
+        if curr_state not in lowest_cost or curr_cost < lowest_cost[curr_state]:
+            lowest_cost[curr_state] = curr_cost
+        if problem.isGoalState(curr_state):
+            if (curr_cost == lowest_cost[curr_state]):
+                print("new best path", curr_path, curr_cost)
+                best_path = curr_path
+            continue
+        succs = problem.getSuccessors(curr_state)
+        for succ_state, succ_dir, succ_cost in succs:
+            cost = succ_cost + curr_cost
+            if succ_state not in lowest_cost or cost < lowest_cost[succ_state]:
+                priority = cost + heuristic(succ_state, problem)
+                succ_path = list(curr_path)
+                succ_path.append(succ_dir)
+                print("adding state", succ_state, "with cost", cost, "priority", priority)
+                priorityQueue.update((succ_state, cost, succ_path), priority)
+    return best_path
+
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
+    return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priorityFunc), heuristicFunc=heuristic)
 
 
 def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHeuristic) -> List[Directions]:
     container = DataStructure()
-    container.push((problem.getStartState(), 0, []))
+    container.push((problem.getStartState(), 0, [], 1))
     visited = set()
     while not container.isEmpty():
-        curr_state, curr_cost, curr_path = container.pop()
+        curr_state, curr_cost, curr_path, _ = container.pop()
         if problem.isGoalState(curr_state):
             return curr_path
         if curr_state in visited:
@@ -130,11 +157,12 @@ def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHe
         visited.add(curr_state)
         succs = problem.getSuccessors(curr_state)
         for succ_state, succ_dir, succ_cost in succs:
-            if succ_state not in visited:
+            if True or succ_state not in visited:
                 succ_path = list(curr_path)
                 succ_path.append(succ_dir)
-                cost = succ_cost + curr_cost + heuristicFunc(succ_state, problem)
-                container.push((succ_state, cost, succ_path))
+                cost = succ_cost + curr_cost
+                priority = cost + heuristicFunc(succ_state, problem)
+                container.push((succ_state, cost, succ_path, priority))
     return []
 
 
