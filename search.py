@@ -63,9 +63,6 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
-
-
-
 def tinyMazeSearch(problem: SearchProblem) -> List[Directions]:
     """
     Returns a sequence of moves that solves tinyMaze.  For any other maze, the
@@ -74,6 +71,7 @@ def tinyMazeSearch(problem: SearchProblem) -> List[Directions]:
     s = Directions.SOUTH
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
+
 
 def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """
@@ -91,50 +89,21 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """
     "*** YOUR CODE HERE ***"
     # stack that stores a tuple of (state, path_to_state)
-    stack = util.Stack()
-    stack.push((problem.getStartState(), []))
-    visited = set()
-    while not stack.isEmpty():
-        curr_state, curr_path = stack.pop()
-        if problem.isGoalState(curr_state):
-            return curr_path
-        if curr_state in visited:
-            continue
-        visited.add(curr_state)
-        succs = problem.getSuccessors(curr_state)
-        for succ_state, succ_dir, _ in succs:
-            if succ_state not in visited:
-                succ_path = list(curr_path)
-                succ_path.append(succ_dir)
-                stack.push((succ_state, succ_path))
-    return []
+    return graphSearch(problem, util.Stack)
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     # queue that stores a tuple of (state, path_to_state)
-    queue = util.Queue()
-    queue.push((problem.getStartState(), []))
-    visited = set()
-    while not queue.isEmpty():
-        curr_state, curr_path = queue.pop()
-        if problem.isGoalState(curr_state):
-            return curr_path
-        if curr_state in visited:
-            continue
-        visited.add(curr_state)
-        succs = problem.getSuccessors(curr_state)
-        for succ_state, succ_dir, _ in succs:
-            if succ_state not in visited:
-                succ_path = list(curr_path)
-                succ_path.append(succ_dir)
-                queue.push((succ_state, succ_path))
-    return []
+    return graphSearch(problem, util.Queue)
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    def priority(graph_node):
+        # we store the cost in the 2nd position
+        return graph_node[1]
+    return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priority))
 
 def nullHeuristic(state, problem=None) -> float:
     """
@@ -146,7 +115,28 @@ def nullHeuristic(state, problem=None) -> float:
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+
+def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHeuristic) -> List[Directions]:
+    container = DataStructure()
+    container.push((problem.getStartState(), 0, []))
+    visited = set()
+    while not container.isEmpty():
+        curr_state, curr_cost, curr_path = container.pop()
+        if problem.isGoalState(curr_state):
+            return curr_path
+        if curr_state in visited:
+            continue
+        visited.add(curr_state)
+        succs = problem.getSuccessors(curr_state)
+        for succ_state, succ_dir, succ_cost in succs:
+            if succ_state not in visited:
+                succ_path = list(curr_path)
+                succ_path.append(succ_dir)
+                cost = succ_cost + curr_cost + heuristicFunc(succ_state, problem)
+                container.push((succ_state, cost, succ_path))
+    return []
+
 
 # Abbreviations
 bfs = breadthFirstSearch
