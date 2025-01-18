@@ -119,17 +119,22 @@ def aStarSearchRepeatExpansion(problem: SearchProblem, heuristic=nullHeuristic) 
     best_path = []
     lowest_cost = {}
     lowest_cost[start_state] = 0
+    lowest_goal_cost = -1
     while not priorityQueue.isEmpty():
         curr_state, curr_cost, curr_path = priorityQueue.pop()
-        if curr_state not in lowest_cost or curr_cost < lowest_cost[curr_state]:
-            lowest_cost[curr_state] = curr_cost
-        if problem.isGoalState(curr_state):
-            if (curr_cost == lowest_cost[curr_state]):
-                print("new best path", curr_path, curr_cost)
-                best_path = curr_path
+        print("expanded", curr_state)
+        if curr_state in lowest_cost and curr_cost > lowest_cost[curr_state]:
             continue
-        succs = problem.getSuccessors(curr_state)
-        for succ_state, succ_dir, succ_cost in succs:
+
+        lowest_cost[curr_state] = curr_cost
+        if problem.isGoalState(curr_state):
+            if (curr_cost < lowest_goal_cost or lowest_goal_cost < 0):
+                lowest_goal_cost = curr_cost
+                best_path = curr_path
+                print("New best path", best_path, curr_cost)
+            continue
+
+        for succ_state, succ_dir, succ_cost in problem.getSuccessors(curr_state):
             cost = succ_cost + curr_cost
             if succ_state not in lowest_cost or cost < lowest_cost[succ_state]:
                 priority = cost + heuristic(succ_state, problem)
@@ -139,11 +144,12 @@ def aStarSearchRepeatExpansion(problem: SearchProblem, heuristic=nullHeuristic) 
                 priorityQueue.update((succ_state, cost, succ_path), priority)
     return best_path
 
-def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
+def aStarSearchNoRepeats(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
     return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priorityFunc), heuristicFunc=heuristic)
 
-
+# aStarSearch = aStarSearchNoRepeats
+aStarSearch = aStarSearchRepeatExpansion
 def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHeuristic) -> List[Directions]:
     container = DataStructure()
     container.push((problem.getStartState(), 0, [], 1))
