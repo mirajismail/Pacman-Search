@@ -110,46 +110,33 @@ def nullHeuristic(state, problem=None) -> float:
     """
     return 0
 
-def aStarSearchRepeatExpansion(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
+def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
     priorityQueue = util.PriorityQueue()
     start_state = problem.getStartState()
     priorityQueue.push((start_state, 0, []), 1)
-    visited = set()
     best_path = []
     lowest_cost = {}
     lowest_cost[start_state] = 0
-    lowest_goal_cost = -1
+
     while not priorityQueue.isEmpty():
         curr_state, curr_cost, curr_path = priorityQueue.pop()
-        print("expanded", curr_state)
-        if curr_state in lowest_cost and curr_cost > lowest_cost[curr_state]:
-            continue
 
-        lowest_cost[curr_state] = curr_cost
         if problem.isGoalState(curr_state):
-            if (curr_cost < lowest_goal_cost or lowest_goal_cost < 0):
-                lowest_goal_cost = curr_cost
-                best_path = curr_path
-                print("New best path", best_path, curr_cost)
-            continue
+            return curr_path
 
         for succ_state, succ_dir, succ_cost in problem.getSuccessors(curr_state):
             cost = succ_cost + curr_cost
+
             if succ_state not in lowest_cost or cost < lowest_cost[succ_state]:
+                lowest_cost[succ_state] = cost
                 priority = cost + heuristic(succ_state, problem)
                 succ_path = list(curr_path)
                 succ_path.append(succ_dir)
-                print("adding state", succ_state, "with cost", cost, "priority", priority)
-                priorityQueue.update((succ_state, cost, succ_path), priority)
+                priorityQueue.push((succ_state, cost, succ_path), priority)
     return best_path
 
-def aStarSearchNoRepeats(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
-    """Search the node that has the lowest combined cost and heuristic first."""
-    return graphSearch(problem, lambda: util.PriorityQueueWithFunction(priorityFunc), heuristicFunc=heuristic)
 
-# aStarSearch = aStarSearchNoRepeats
-aStarSearch = aStarSearchRepeatExpansion
 def graphSearch(problem: SearchProblem, DataStructure: any, heuristicFunc=nullHeuristic) -> List[Directions]:
     container = DataStructure()
     container.push((problem.getStartState(), 0, [], 1))
