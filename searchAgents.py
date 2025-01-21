@@ -360,11 +360,16 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible.
     """
-    corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    pos, remaining_corners = state
+    curr_x, curr_y = pos
+    distances = [0]
+    for corner in remaining_corners:
+        corner_x, corner_y = corner
+        distance = abs(curr_x - corner_x) + abs(curr_y - corner_y)
+        distances.append(distance)
+    return max(distances)
 
 
 
